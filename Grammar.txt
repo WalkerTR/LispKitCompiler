@@ -1,0 +1,117 @@
+GRAMMAR
+Bind -> var = Exp X
+E1 -> OPA T E1 | EPSILON
+Exp -> Prog | lambda ( Seq_Var ) Exp | ExpA | OPP ( Seq_Exp ) | if Exp then Exp else Exp
+ExpA -> T E1
+F -> var Y | exp_const | ( ExpA )
+OPA -> + | -
+OPM -> * | /
+OPP -> cons | car | cdr | eq | leq | atom
+Pippo -> COMMA Seq_Exp | EPSILON
+Prog -> let Bind in Exp end | letrec Bind in Exp end
+Seq_Exp -> Exp Pippo
+Seq_Var -> var Seq_Var | EPSILON
+T -> F T1
+T1 -> OPM F T1 | EPSILON
+X -> and Bind | EPSILON
+Y -> ( Seq_Exp ) | EPSILON
+
+
+FIRST SET
+Bind        var
+E1          EPSILON, +, -
+Exp         lambda, if, let, letrec, cons, car, cdr, eq, leq, atom, var, exp_const, (
+ExpA        var, exp_const, (
+F           var, exp_const, (
+OPA         +, -
+OPM         *, /
+OPP         cons, car, cdr, eq, leq, atom
+Pippo       COMMA, EPSILON
+Prog        let, letrec
+Seq_Exp     lambda, if, let, letrec, cons, car, cdr, eq, leq, atom, var, exp_const, (
+Seq_Var     var, EPSILON
+T           var, exp_const, (
+T1          EPSILON, *, /
+X           and, EPSILON
+Y           (, EPSILON
+
+
+
+FOLLOW SET
+Bind        in
+E1          ), COMMA, then, else, and, end, in
+Exp         COMMA, then, else, and, end, ), in
+ExpA        ), COMMA, then, else, and, end, in
+F           *, /, +, -, ), COMMA, then, else, and, end, in
+OPA         var, exp_const, (
+OPM         var, exp_const, (
+OPP         (
+Pippo       )
+Prog        $, COMMA, then, else, and, end, ), in
+Seq_Exp     )
+Seq_Var     )
+T           +, -, ), COMMA, then, else, and, end, in
+T1          +, -, ), COMMA, then, else, and, end, in
+X           in
+Y           *, /, +, -, ), COMMA, then, else, and, end, in}
+
+PREDICT SET
+01  Bind → var = Exp X  var
+02  E1 → OPA T E1   +, -
+03  E1 → EPSILON  ), COMMA, then, else, and, end, in
+04  Exp → ExpA  var, exp_const, (
+05  Exp → if Exp then Exp else Exp  if
+06  Exp → lambda ( Seq_Var ) Exp    lambda
+07  Exp → OPP ( Seq_Exp )   cons, car, cdr, eq, leq, atom
+08  Exp → Prog  let, letrec
+09  ExpA → T E1 var, exp_const, (
+10  F → ( ExpA )    (
+11  F → exp_const   exp_const
+12  F → var Y   var
+13  OPA → + +
+14  OPA → - -
+15  OPM → * *
+16  OPM → / /
+17  OPP → atom  atom
+18  OPP → car   car
+19  OPP → cdr   cdr
+20  OPP → cons  cons
+21  OPP → eq    eq
+22  OPP → leq   leq
+23  Pippo → COMMA Seq_Exp COMMA
+24  Pippo → EPSILON   )
+25  Prog → let Bind in Exp end  let
+26  Prog → letrec Bind in Exp end   letrec
+27  Seq_Exp → Exp Pippo lambda, if, let, letrec, cons, car, cdr, eq, leq, atom, var, exp_const, (
+28  Seq_Var → var Seq_Var   var
+29  Seq_Var → EPSILON )
+30  T → F T1    var, exp_const, (
+31  T1 → OPM F T1   *, /
+32  T1 → EPSILON  +, -, ), COMMA, then, else, and, end, in
+33  X → and Bind    and
+34  X → EPSILON   in
+35  Y → ( Seq_Exp ) (
+36  Y → EPSILON   *, /, +, -, ), COMMA, then, else, and, end, in
+
+
+
++----------+-----+----+-----+--------+-----+---+-----+---+--------+---+---+----+------+------+-----------+---+---+---+---+------+-----+-----+----+-----+------+---+
+|          | let | in | end | letrec | var | = | and | EPSILON | lambda | ( | ) | if | then | else | exp_const | + | - | * | / | cons | car | cdr | eq | leq | atom | , |
++----------+-----+----+-----+--------+-----+---+-----+---+--------+---+---+----+------+------+-----------+---+---+---+---+------+-----+-----+----+-----+------+---+
+| Bind     |     |    |     |        |   1 |   |     |   |        |   |   |    |      |      |           |   |   |   |   |      |     |     |    |     |      |   |
+| E1       |     |  2 |   2 |        |     |   |   2 |   |        |   | 2 |    |    2 |    2 |           | 1 | 1 |   |   |      |     |     |    |     |      | 2 |
+| Exp      |   1 |    |     |      1 |   3 |   |     |   |      2 | 3 |   |  5 |      |      |         3 |   |   |   |   |    4 |   4 |   4 |  4 |   4 |    4 |   |
+| ExpA     |     |    |     |        |   1 |   |     |   |        | 1 |   |    |      |      |         1 |   |   |   |   |      |     |     |    |     |      |   |
+| F        |     |    |     |        |   1 |   |     |   |        | 3 |   |    |      |      |         2 |   |   |   |   |      |     |     |    |     |      |   |
+| OPA      |     |    |     |        |     |   |     |   |        |   |   |    |      |      |           | 1 | 2 |   |   |      |     |     |    |     |      |   |
+| OPM      |     |    |     |        |     |   |     |   |        |   |   |    |      |      |           |   |   | 1 | 2 |      |     |     |    |     |      |   |
+| OPP      |     |    |     |        |     |   |     |   |        |   |   |    |      |      |           |   |   |   |   |    1 |   2 |   3 |  4 |   5 |    6 |   |
+| Pippo    |     |    |     |        |     |   |     |   |        |   | 2 |    |      |      |           |   |   |   |   |      |     |     |    |     |      | 1 |
+| Prog     |   1 |    |     |      2 |     |   |     |   |        |   |   |    |      |      |           |   |   |   |   |      |     |     |    |     |      |   |
+| Seq_Exp  |   1 |    |     |      1 |   1 |   |     |   |      1 | 1 |   |  1 |      |      |         1 |   |   |   |   |    1 |   1 |   1 |  1 |   1 |    1 |   |
+| Seq_Var  |     |    |     |        |   1 |   |     |   |        |   | 2 |    |      |      |           |   |   |   |   |      |     |     |    |     |      |   |
+| T        |     |    |     |        |   1 |   |     |   |        | 1 |   |    |      |      |         1 |   |   |   |   |      |     |     |    |     |      |   |
+| T1       |     |  2 |   2 |        |     |   |   2 |   |        |   | 2 |    |    2 |    2 |           | 2 | 2 | 1 | 1 |      |     |     |    |     |      | 2 |
+| X        |     |  2 |     |        |     |   |   1 |   |        |   |   |    |      |      |           |   |   |   |   |      |     |     |    |     |      |   |
+| Y        |     |  2 |   2 |        |     |   |   2 |   |        | 1 |   |    |    2 |    2 |           | 2 | 2 | 2 | 2 |      |     |     |    |     |      | 2 |
++----------+-----+----+-----+--------+-----+---+-----+---+--------+---+---+----+------+------+-----------+---+---+---+---+------+-----+-----+----+-----+------+---+
